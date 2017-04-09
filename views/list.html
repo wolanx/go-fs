@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>list</title>
+	<link rel="stylesheet" href="assets/1.css">
+	<script src="assets/1.js"></script>
+</head>
+<body>
+<a href="upload">upload</a><br><br>
+
+<div>
+{{range $.images}}
+	<a href="/view?id={{.|urlquery}}"><img src="/view?id={{.|urlquery}}">{{.|html}}</a>
+{{end}}
+</div>
+</body>
+</html>
