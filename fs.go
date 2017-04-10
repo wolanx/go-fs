@@ -15,15 +15,15 @@ import (
 )
 
 const (
-	ListDir       = 0x0001
-	UPLOAD_DIR    = "./uploads"
-	TEMPLATTE_DIR = "./views"
+	ListDir      = 0x0001
+	UPLOAD_DIR   = "./uploads"
+	TEMPLATE_DIR = "./views"
 )
 
 var templates map[string]*template.Template
 
 func init() {
-	fileInfoArr, err := ioutil.ReadDir(TEMPLATTE_DIR)
+	fileInfoArr, err := ioutil.ReadDir(TEMPLATE_DIR)
 	check(err)
 
 	templates = make(map[string]*template.Template)
@@ -33,7 +33,7 @@ func init() {
 		if ext := path.Ext(templateName); ext != ".html" {
 			continue
 		}
-		templatePath = TEMPLATTE_DIR + "/" + templateName
+		templatePath = TEMPLATE_DIR + "/" + templateName
 		log.Println("Loading template: ", templatePath)
 		t := template.Must(template.ParseFiles(templatePath))
 		templates[templatePath] = t
@@ -50,13 +50,13 @@ func check(err error) {
 }
 
 func readerHtml(w http.ResponseWriter, tmpl string, locals map[string]interface{}) {
-	tmpl = TEMPLATTE_DIR + "/" + tmpl + ".html"
+	tmpl = TEMPLATE_DIR + "/" + tmpl + ".html"
 	err := templates[tmpl].Execute(w, locals)
 	check(err)
 }
 
 // func readerHtml(w http.ResponseWriter, tmpl string, locals map[string]interface{}) (err error) {
-// 	t, err := template.ParseFiles(TEMPLATTE_DIR + "/" + tmpl + ".html")
+// 	t, err := template.ParseFiles(TEMPLATE_DIR + "/" + tmpl + ".html")
 // 	if err != nil {
 // 		return
 // 	}
