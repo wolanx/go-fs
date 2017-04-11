@@ -5,17 +5,20 @@ package main
 
 import (
 	"html/template"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path"
 	"runtime/debug"
+	"io"
+	"crypto/md5"
+	"fmt"
 )
 
 const (
 	ListDir      = 0x0001
+	TEMP_DIR     = "./temp"
 	UPLOAD_DIR   = "./uploads"
 	TEMPLATE_DIR = "./views"
 )
@@ -37,9 +40,6 @@ func init() {
 		log.Println("Loading template: ", templatePath)
 		t := template.Must(template.ParseFiles(templatePath))
 		templates[templatePath] = t
-	}
-	for _, a := range templates {
-		log.Printf("%v", a)
 	}
 }
 
@@ -78,20 +78,41 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method == "POST" {
 		f, h, err := r.FormFile("image")
-		check(err)
-		filename := h.Filename
 		defer f.Close()
-		//方法1
-		t, err := ioutil.TempFile(UPLOAD_DIR, filename)
-		defer os.Rename(t.Name(), UPLOAD_DIR+"/"+filename)
-		//方法2
-		// t, err := os.Create(UPLOAD_DIR + "/" + filename)
-		check(err)
-		defer t.Close()
-		_, err = io.Copy(t, f)
 		check(err)
 
-		http.Redirect(w, r, "/view?id="+filename, http.StatusFound)
+		uplode_name := h.Filename
+
+		// 保存临时文件
+		temp_file, err := ioutil.TempFile(TEMP_DIR, uplode_name) // temp_file.Name() temp\tx.jpg309941499
+		defer temp_file.Close()
+		check(err)
+		_, err = io.Copy(temp_file, f)
+		check(err)
+		temp_file.Seek(0, 0)
+		temp_file.Sync()
+
+		// md5
+		m := md5.New()
+		io.Copy(m, temp_file)
+		md5_hex := m.Sum([]byte(""))
+
+		md5_name := fmt.Sprintf("%x", md5_hex)
+		log.Printf(md5_name)
+
+		temp_file.Seek(0, 0)
+
+		log.Println(uplode_name)
+		// 新建文件
+		new_file, err := os.Create(UPLOAD_DIR + "/" + string(md5_name))
+		defer new_file.Close()
+		check(err)
+		_, err = io.Copy(new_file, temp_file)
+		check(err)
+		err = new_file.Sync()
+		check(err)
+
+		http.Redirect(w, r, "/upload", http.StatusFound)
 	}
 }
 
