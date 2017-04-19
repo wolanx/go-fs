@@ -14,6 +14,7 @@ import (
 	"io"
 	"crypto/md5"
 	"fmt"
+	"encoding/json"
 )
 
 const (
@@ -37,7 +38,7 @@ func init() {
 			continue
 		}
 		templatePath = TEMPLATE_DIR + "/" + templateName
-		log.Println("Loading template: ", templatePath)
+		//log.Println("Loading template: ", templatePath)
 		t := template.Must(template.ParseFiles(templatePath))
 		templates[templatePath] = t
 	}
@@ -73,11 +74,15 @@ func isExists(path string) bool {
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	if r.Method == "GET" {
 		readerHtml(w, "upload", nil)
 	}
 	if r.Method == "POST" {
-		f, h, err := r.FormFile("image")
+		f, h, err := r.FormFile("file")
 		defer f.Close()
 		check(err)
 
@@ -98,13 +103,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		md5_hex := m.Sum([]byte(""))
 
 		md5_name := fmt.Sprintf("%x", md5_hex)
-		log.Printf(md5_name)
 
 		temp_file.Seek(0, 0)
 
-		log.Println(uplode_name)
+		new_name := string(md5_name) + path.Ext(uplode_name)
+		log.Println(new_name)
 		// 新建文件
-		new_file, err := os.Create(UPLOAD_DIR + "/" + string(md5_name))
+		new_file, err := os.Create(UPLOAD_DIR + "/" + new_name)
 		defer new_file.Close()
 		check(err)
 		_, err = io.Copy(new_file, temp_file)
@@ -112,7 +117,12 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		err = new_file.Sync()
 		check(err)
 
-		http.Redirect(w, r, "/upload", http.StatusFound)
+		res := map[string]interface{}{
+			"name": new_name,
+		}
+		str, _ := json.Marshal(res)
+		w.Write(str)
+		//http.Redirect(w, r, "/upload", http.StatusFound)
 	}
 }
 
@@ -123,7 +133,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	w.Header().Set("Content-Type", "image")
+	//w.Header().Set("Content-Type", "application/pdf")
 	http.ServeFile(w, r, imagePath)
 }
 

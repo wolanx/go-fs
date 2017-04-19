@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>upload</title>
+    <script src="http://www.test.com/jquery.js"></script>
+</head>
+<body>
+
+<input type="file" id="file">
+
+<script>
+    $(function () {
+        $('#file').change(function () {
+            var form = new FormData();
+            form.append("file", this.files[0]);
+
+            $.ajax({
+                type: 'post',
+                url: 'http://localhost:8080/upload',
+                data: form,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    console.log(res);
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>
