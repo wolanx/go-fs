@@ -83,15 +83,15 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method == "POST" {
 		f, h, err := r.FormFile("file")
-		defer f.Close()
 		check(err)
+		defer f.Close()
 
 		uplode_name := h.Filename
 
 		// 保存临时文件
 		temp_file, err := ioutil.TempFile(TEMP_DIR, uplode_name) // temp_file.Name() temp\tx.jpg309941499
-		defer temp_file.Close()
 		check(err)
+		defer temp_file.Close()
 		_, err = io.Copy(temp_file, f)
 		check(err)
 		temp_file.Seek(0, 0)
@@ -110,8 +110,8 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(new_name)
 		// 新建文件
 		new_file, err := os.Create(UPLOAD_DIR + "/" + new_name)
-		defer new_file.Close()
 		check(err)
+		defer new_file.Close()
 		_, err = io.Copy(new_file, temp_file)
 		check(err)
 		err = new_file.Sync()
