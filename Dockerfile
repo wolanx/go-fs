@@ -1,7 +1,6 @@
 FROM alpine:3.6
 
-COPY temp /myapp/
-COPY uploads /myapp/
-COPY myapp /myapp/
+WORKDIR /myapp
+COPY . /myapp/
 
-CMD ["/myapp/myapp"]
+CMD ["./myapp"]
