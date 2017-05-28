@@ -17,12 +17,18 @@ func main() {
 }
 ```
 
+# Dockerfile
+```
+FROM alpine:3.6
+
+WORKDIR /myapp
+COPY . /myapp/
+
+CMD ["./myapp"]
+```
+
 # deploy
 ```
-docker build -t go-img-1:v1 .
-
-docker run -it --name go-app-1 go-img-1:v1
-
-docker run --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp -e GOOS=darwin golang:1.8.1-alpine go build -v
-docker run --rm -v "$PWD":"$PWD" -w "$PWD" -e GOOS=darwin golang:1.8.1-alpine go build -v
+make
+docker run -it -d -p 8080:8080 --name go-fs-app-1 go-fs-img-1:v1
 ```
