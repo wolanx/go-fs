@@ -6,4 +6,6 @@ COPY . .
 RUN go-wrapper download
 RUN go-wrapper install
 
-CMD ["go", "build", "-v"]
+RUN go build -v
+
+CMD ["go-wrapper", "run"]
