@@ -1,0 +1,9 @@
+FROM golang:1.8.1-alpine
+
+WORKDIR /go/src/myapp
+COPY . .
+
+RUN go-wrapper download
+RUN go-wrapper install
+
+CMD ["go", "build", "-v"]
