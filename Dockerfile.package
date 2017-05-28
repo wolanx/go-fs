@@ -1,6 +1,7 @@
 FROM alpine:3.6
 
 WORKDIR /myapp
+COPY go/src/myapp/myapp /myapp/
 COPY . /myapp/
 
 CMD ["./myapp"]
