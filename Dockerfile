@@ -1,9 +1,7 @@
-FROM golang:1.8.1-alpine
+FROM alpine:3.6
 
-WORKDIR /go/src/app
-COPY . .
+COPY temp /myapp/
+COPY uploads /myapp/
+COPY myapp /myapp/
 
-RUN go-wrapper download   # "go get -d -v ./..."
-RUN go-wrapper install    # "go install -v ./..."
-
-CMD ["go-wrapper", "run"] # ["app"]
+CMD ["/myapp/myapp"]
