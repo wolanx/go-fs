@@ -32,3 +32,8 @@ CMD ["./myapp"]
 make
 docker run -it -d -p 8080:8080 --name go-fs-app-1 go-fs-img-1:v1
 ```
+
+# hook
+```
+http://139.196.14.10:8080/github-webhook/
+```
