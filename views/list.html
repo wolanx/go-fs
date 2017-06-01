@@ -7,12 +7,17 @@
 	<script src="assets/1.js"></script>
 </head>
 <body>
-<a href="upload">upload</a><br><br>
 
+<div>{{$.hostname}}</div>
 <div>
-{{range $.images}}
-	<a href="/view?id={{.|urlquery}}"><img src="/view?id={{.|urlquery}}">{{.|html}}</a>
-{{end}}
+	<a href="upload">upload</a>
 </div>
+
+
+<ul>
+{{range $.images}}
+	<li><a href="/view?id={{.|urlquery}}">{{.|html}}</a><img src="/view?id={{.|urlquery}}"></li>
+{{end}}
+</ul>
 </body>
 </html>

@@ -4,17 +4,17 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/json"
+	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path"
 	"runtime/debug"
-	"io"
-	"crypto/md5"
-	"fmt"
-	"encoding/json"
 )
 
 const (
@@ -145,6 +145,7 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 	for _, fileInfo := range fileInfoArr {
 		images = append(images, fileInfo.Name())
 	}
+	locals["hostname"], _ = os.Hostname()
 	locals["images"] = images
 	readerHtml(w, "list", locals)
 }
