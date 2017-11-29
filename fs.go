@@ -44,6 +44,18 @@ func init() {
 	}
 }
 
+func main() {
+	mux := http.NewServeMux()
+	staticDirHandler(mux, "/assets/", "./public", 0)
+	mux.HandleFunc("/", safeHandler(listHandler))
+	mux.HandleFunc("/view", safeHandler(viewHandler))
+	mux.HandleFunc("/upload", safeHandler(uploadHandler))
+	err := http.ListenAndServe(":8080", mux)
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err.Error())
+	}
+}
+
 func check(err error) {
 	if err != nil {
 		panic(err)
@@ -175,16 +187,4 @@ func staticDirHandler(mux *http.ServeMux, prefix string, staticDir string, flags
 		http.ServeFile(w, r, file)
 		return
 	})
-}
-
-func main() {
-	mux := http.NewServeMux()
-	staticDirHandler(mux, "/assets/", "./public", 0)
-	mux.HandleFunc("/", safeHandler(listHandler))
-	mux.HandleFunc("/view", safeHandler(viewHandler))
-	mux.HandleFunc("/upload", safeHandler(uploadHandler))
-	err := http.ListenAndServe(":8080", mux)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err.Error())
-	}
 }

@@ -1,14 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<title>upload</title>
+    <meta charset="UTF-8">
+    <title>upload</title>
+    <script src="assets/jquery.min.js"></script>
 </head>
 <body>
-<form action="/upload" method="post" enctype="multipart/form-data">
-	Choose an image to upload
-	<input type="file" name="file">
-	<input type="submit" value="Upload">
-</form>
+
+<input type="file" name="file" id="file">
+
+<pre id="pre"></pre>
+
+<script>
+    $('#file').change(() => {
+        let formData = new FormData();
+        formData.append("file", $("#file")[0].files[0]);
+        formData.append("name", 'asdfsf');
+
+        $.ajax({
+            method: 'post',
+            url: '/upload',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+                console.log(data);
+                $('#pre').html($('#pre').html() + data + '\n');
+            }
+        });
+    });
+</script>
+
 </body>
 </html>
