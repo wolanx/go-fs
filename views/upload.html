@@ -13,19 +13,32 @@
 
 <script>
     $('#file').change(() => {
-        let formData = new FormData();
-        formData.append("file", $("#file")[0].files[0]);
-        formData.append("name", 'asdfsf');
+        let f = $("#file")[0].files[0];
 
         $.ajax({
             method: 'post',
-            url: '/upload',
-            data: formData,
-            processData: false,
-            contentType: false,
+            url: '/demo',
+            data: {
+                filename: f.name
+            },
             success: function (data) {
                 console.log(data);
-                $('#pre').html($('#pre').html() + data + '\n');
+
+                let formData = new FormData();
+                formData.append("file", f);
+                formData.append("token", data.token);
+
+                $.ajax({
+                    method: 'post',
+                    url: '/upload',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        console.log(data);
+                        pre.innerHTML += JSON.stringify(data)
+                    }
+                });
             }
         });
     });

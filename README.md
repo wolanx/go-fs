@@ -30,7 +30,7 @@ CMD ["./myapp"]
 # deploy
 ```
 make
-docker run -it -d -p 22016:8080 --name go-fs-app-1 go-fs-img-1:v1
+docker run -it -d -p 22016:8080 --name go-fs go-fs:v1
 ```
 
 # hook

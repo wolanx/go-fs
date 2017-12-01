@@ -1,7 +1,6 @@
 FROM alpine:3.6
 
-WORKDIR /myapp
-COPY . /myapp/
+WORKDIR /app
+COPY . /app/
 
-CMD ["./myapp"]
-
+CMD ["./app"]
