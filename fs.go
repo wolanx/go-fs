@@ -16,6 +16,11 @@ import (
 	"path"
 	"runtime/debug"
 	"strings"
+	"time"
+	"encoding/base64"
+	"errors"
+	"crypto/hmac"
+	"crypto/sha1"
 )
 
 const (
@@ -26,8 +31,26 @@ const (
 )
 
 var templates map[string]*template.Template
+var keyArr map[string]interface{}
+var myAccessKey string
+var mySecretKey string
 
 func init() {
+	myAccessKey = os.Getenv("MY_ACCESS_KEY")
+	mySecretKey = os.Getenv("MY_SECRET_KEY")
+	if myAccessKey == "" {
+		myAccessKey = "MY_test1"
+	}
+	if mySecretKey == "" {
+		mySecretKey = "MY_test2"
+	}
+
+	log.Println(myAccessKey, mySecretKey)
+
+	keyArr = make(map[string]interface{})
+	//keyArr["MY_ACCESS_KEY"] = "MY_SECRET_KEY"
+	keyArr[myAccessKey] = mySecretKey
+
 	fileInfoArr, err := ioutil.ReadDir(TEMPLATE_DIR)
 	check(err)
 
@@ -138,20 +161,42 @@ func staticDirHandler(mux *http.ServeMux, prefix string, staticDir string, flags
 	})
 }
 
-//@see https://developer.qiniu.com/kodo/manual/1208/upload-token
-func checkToken(token string) bool {
+type Policy struct {
+	Filename string `json:"filename"`
+	Deadline int64  `json:"deadline"`
+}
+
+func checkToken(token string) (policy Policy, err error) {
 	tokenArr := strings.Split(token, ":")
 	if len(tokenArr) != 3 {
-		return false
+		err = errors.New("no 3")
+		return
 	}
 	accessKey := tokenArr[0]
 	sign := tokenArr[1]
-	policy := tokenArr[2]
-	log.Println(accessKey, sign, policy)
+	policyStr, _ := base64.StdEncoding.DecodeString(tokenArr[2])
+	policy = Policy{}
+	json.Unmarshal(policyStr, &policy)
+	log.Println(accessKey, sign, string(policyStr), policy)
 
-	return true
+	secretKey := keyArr[accessKey]
+	if secretKey == nil {
+		err = errors.New("secretKey not exist")
+		return
+	}
+
+	mac := hmac.New(sha1.New, []byte(secretKey.(string)))
+	mac.Write([]byte(tokenArr[2]))
+	signCheck := fmt.Sprintf("%x", mac.Sum(nil))
+	if sign != signCheck {
+		err = errors.New("sign not eq")
+		return
+	}
+
+	return policy, nil
 }
 
+//@ref https://developer.qiniu.com/kodo/manual/1208/upload-token
 func demoHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		readerHtml(w, "upload", nil)
@@ -159,12 +204,20 @@ func demoHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		w.Header().Set("content-type", "application/json")
 
-		accessKey := "asdsad"
-		sign := "123"
-		policy := "xzc"
+		filename := r.PostFormValue("filename")
+
+		accessKey := myAccessKey
+		policy, _ := json.Marshal(&Policy{
+			Filename: filename,
+			Deadline: time.Now().Unix(),
+		})
+		policyStr := base64.StdEncoding.EncodeToString(policy)
+		mac := hmac.New(sha1.New, []byte(mySecretKey))
+		mac.Write([]byte(policyStr))
+		sign := mac.Sum(nil)
 
 		ret := map[string]interface{}{}
-		ret["token"] = accessKey + ":" + sign + ":" + policy
+		ret["token"] = accessKey + ":" + fmt.Sprintf("%x", sign) + ":" + policyStr
 		str, _ := json.Marshal(ret)
 		w.Write(str)
 	}
@@ -180,8 +233,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		ret := map[string]interface{}{}
 
 		token := r.PostFormValue("token")
-		if !checkToken(token) {
-			ret["msg"] = "token false"
+		config, err := checkToken(token)
+		if err != nil {
+			ret["msg"] = err.Error()
 			str, _ := json.Marshal(ret)
 			w.WriteHeader(500)
 			w.Write(str)
@@ -192,8 +246,17 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		defer file.Close()
 		check(err)
 
-		upload_name := handle.Filename
-		ext := path.Ext(upload_name) // .png
+		uploadName := handle.Filename
+		log.Println("config: ", config)
+		if uploadName != config.Filename {
+			ret["msg"] = "filename not match"
+			str, _ := json.Marshal(ret)
+			w.WriteHeader(500)
+			w.Write(str)
+			return
+		}
+
+		ext := path.Ext(uploadName) // .png
 		arr := map[string]interface{}{
 			".png":  "1",
 			".jpg":  "1",
@@ -209,35 +272,35 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 保存临时文件
-		temp_file, err := ioutil.TempFile(TEMP_DIR, upload_name)
-		defer temp_file.Close()
-		//defer os.Remove(temp_file.Name()) // temp/favicon.ico395854444
+		tempFile, err := ioutil.TempFile(TEMP_DIR, uploadName)
+		defer tempFile.Close()
+		//defer os.Remove(tempFile.Name()) // temp/favicon.ico395854444
 		check(err)
-		_, err = io.Copy(temp_file, file)
+		_, err = io.Copy(tempFile, file)
 		check(err)
-		temp_file.Seek(0, 0)
-		temp_file.Sync()
+		tempFile.Seek(0, 0)
+		tempFile.Sync()
 
 		// md5
 		m := md5.New()
-		io.Copy(m, temp_file)
+		io.Copy(m, tempFile)
 		md5_hex := m.Sum([]byte(""))
 		md5_name := fmt.Sprintf("%x", md5_hex)
 
-		temp_file.Seek(0, 0)
+		tempFile.Seek(0, 0)
 
-		new_name := string(md5_name) + ext
-		log.Println(new_name)
+		newName := string(md5_name) + ext
+		log.Println(newName)
 		// 新建文件
-		new_file, err := os.Create(UPLOAD_DIR + "/" + new_name)
+		newFile, err := os.Create(UPLOAD_DIR + "/" + newName)
 		check(err)
-		defer new_file.Close()
-		_, err = io.Copy(new_file, temp_file)
+		defer newFile.Close()
+		_, err = io.Copy(newFile, tempFile)
 		check(err)
-		err = new_file.Sync()
+		err = newFile.Sync()
 		check(err)
 
-		ret["name"] = new_name
+		ret["name"] = newName
 		str, _ := json.Marshal(ret)
 		w.Write(str)
 	}
