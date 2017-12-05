@@ -36,8 +36,8 @@ var myAccessKey string
 var mySecretKey string
 
 func init() {
-	myAccessKey = os.Getenv("MY_ACCESS_KEY")
-	mySecretKey = os.Getenv("MY_SECRET_KEY")
+	myAccessKey = os.Getenv("ACCESS_KEY")
+	mySecretKey = os.Getenv("SECRET_KEY")
 	if myAccessKey == "" {
 		myAccessKey = "MY_test1"
 	}
@@ -48,7 +48,7 @@ func init() {
 	log.Println(myAccessKey, mySecretKey)
 
 	keyArr = make(map[string]interface{})
-	//keyArr["MY_ACCESS_KEY"] = "MY_SECRET_KEY"
+	//keyArr["ACCESS_KEY"] = "SECRET_KEY"
 	keyArr[myAccessKey] = mySecretKey
 
 	fileInfoArr, err := ioutil.ReadDir(TEMPLATE_DIR)
@@ -122,16 +122,29 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func listHandler(w http.ResponseWriter, r *http.Request) {
-	fileInfoArr, err := ioutil.ReadDir("./uploads")
-	check(err)
-	locals := make(map[string]interface{})
-	images := []string{}
-	for _, fileInfo := range fileInfoArr {
-		images = append(images, fileInfo.Name())
+	imageId := r.URL.Path // /6005f38d6f4160d3f15da8d7673102b0.json
+
+	if imageId == "" {
+		fileInfoArr, err := ioutil.ReadDir("./uploads")
+		check(err)
+		locals := make(map[string]interface{})
+		images := []string{}
+		for _, fileInfo := range fileInfoArr {
+			images = append(images, fileInfo.Name())
+		}
+		locals["hostname"], _ = os.Hostname()
+		locals["images"] = images
+		readerHtml(w, "list", locals)
+	} else {
+		log.Println(imageId)
+		imagePath := UPLOAD_DIR + "/" + imageId
+		if exists := isExists(imagePath); !exists {
+			http.NotFound(w, r)
+			return
+		}
+		//w.Header().Set("Content-Type", "application/pdf")
+		http.ServeFile(w, r, imagePath)
 	}
-	locals["hostname"], _ = os.Hostname()
-	locals["images"] = images
-	readerHtml(w, "list", locals)
 }
 
 func safeHandler(fn http.HandlerFunc) http.HandlerFunc {
@@ -161,9 +174,14 @@ func staticDirHandler(mux *http.ServeMux, prefix string, staticDir string, flags
 	})
 }
 
+type SaveConfig struct {
+	Engine string `json:"engine"`
+}
+
 type Policy struct {
-	Filename string `json:"filename"`
-	Deadline int64  `json:"deadline"`
+	Filename   string     `json:"filename"`
+	Deadline   int64      `json:"deadline"`
+	SaveConfig SaveConfig `json:"saveConfig"`
 }
 
 func checkToken(token string) (policy Policy, err error) {
@@ -177,7 +195,7 @@ func checkToken(token string) (policy Policy, err error) {
 	policyStr, _ := base64.StdEncoding.DecodeString(tokenArr[2])
 	policy = Policy{}
 	json.Unmarshal(policyStr, &policy)
-	log.Println(accessKey, sign, string(policyStr), policy)
+	//log.Println(accessKey, sign, string(policyStr), policy)
 
 	secretKey := keyArr[accessKey]
 	if secretKey == nil {
@@ -187,7 +205,7 @@ func checkToken(token string) (policy Policy, err error) {
 
 	mac := hmac.New(sha1.New, []byte(secretKey.(string)))
 	mac.Write([]byte(tokenArr[2]))
-	signCheck := fmt.Sprintf("%x", mac.Sum(nil))
+	signCheck := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	if sign != signCheck {
 		err = errors.New("sign not eq")
 		return
@@ -217,7 +235,7 @@ func demoHandler(w http.ResponseWriter, r *http.Request) {
 		sign := mac.Sum(nil)
 
 		ret := map[string]interface{}{}
-		ret["token"] = accessKey + ":" + fmt.Sprintf("%x", sign) + ":" + policyStr
+		ret["token"] = accessKey + ":" + base64.StdEncoding.EncodeToString(sign) + ":" + policyStr
 		str, _ := json.Marshal(ret)
 		w.Write(str)
 	}
@@ -290,7 +308,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		tempFile.Seek(0, 0)
 
 		newName := string(md5_name) + ext
-		log.Println(newName)
 		// 新建文件
 		newFile, err := os.Create(UPLOAD_DIR + "/" + newName)
 		check(err)
@@ -300,7 +317,16 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		err = newFile.Sync()
 		check(err)
 
-		ret["name"] = newName
+		scheme := "http://"
+		if r.TLS != nil {
+			scheme = "https://"
+		}
+
+		urlPath := os.Getenv("URL_PATH")
+
+		ret["key"] = newName
+		ret["name"] = scheme + r.Host + urlPath + "/" + newName
+		log.Println(ret["name"])
 		str, _ := json.Marshal(ret)
 		w.Write(str)
 	}
