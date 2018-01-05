@@ -4,8 +4,12 @@
 package main
 
 import (
+	"crypto/hmac"
 	"crypto/md5"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -17,17 +21,14 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
-	"encoding/base64"
-	"errors"
-	"crypto/hmac"
-	"crypto/sha1"
 )
 
 const (
-	ListDir      = 0x0001
-	TEMP_DIR     = "./temp"
-	UPLOAD_DIR   = "./uploads"
-	TEMPLATE_DIR = "./views"
+	Port        = "8080"
+	UploadDir   = "./uploads"
+	TemplateDir = "./views"
+	TempDir     = "./temp"
+	ListDir     = 0x0001
 )
 
 var templates map[string]*template.Template
@@ -51,7 +52,7 @@ func init() {
 	//keyArr["ACCESS_KEY"] = "SECRET_KEY"
 	keyArr[myAccessKey] = mySecretKey
 
-	fileInfoArr, err := ioutil.ReadDir(TEMPLATE_DIR)
+	fileInfoArr, err := ioutil.ReadDir(TemplateDir)
 	check(err)
 
 	templates = make(map[string]*template.Template)
@@ -61,7 +62,7 @@ func init() {
 		if ext := path.Ext(templateName); ext != ".html" {
 			continue
 		}
-		templatePath = TEMPLATE_DIR + "/" + templateName
+		templatePath = TemplateDir + "/" + templateName
 		//log.Println("Loading template: ", templatePath)
 		t := template.Must(template.ParseFiles(templatePath))
 		templates[templatePath] = t
@@ -70,12 +71,13 @@ func init() {
 
 func main() {
 	mux := http.NewServeMux()
-	staticDirHandler(mux, "/assets/", "./public", 0)
-	mux.HandleFunc("/", safeHandler(listHandler))
-	mux.HandleFunc("/view", safeHandler(viewHandler))
+	staticDirHandler(mux, "/assets/", "./assets", 0)
+	mux.HandleFunc("/list", safeHandler(listHandler))
+	mux.HandleFunc("/info", safeHandler(infoHandler))
 	mux.HandleFunc("/demo", safeHandler(demoHandler))
 	mux.HandleFunc("/upload", safeHandler(uploadHandler))
-	err := http.ListenAndServe(":8080", mux)
+	mux.HandleFunc("/", safeHandler(indexHandler))
+	err := http.ListenAndServe(":"+Port, mux)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err.Error())
 	}
@@ -88,19 +90,10 @@ func check(err error) {
 }
 
 func readerHtml(w http.ResponseWriter, tmpl string, locals map[string]interface{}) {
-	tmpl = TEMPLATE_DIR + "/" + tmpl + ".html"
+	tmpl = TemplateDir + "/" + tmpl + ".html"
 	err := templates[tmpl].Execute(w, locals)
 	check(err)
 }
-
-// func readerHtml(w http.ResponseWriter, tmpl string, locals map[string]interface{}) (err error) {
-// 	t, err := template.ParseFiles(TEMPLATE_DIR + "/" + tmpl + ".html")
-// 	if err != nil {
-// 		return
-// 	}
-// 	err = t.Execute(w, locals)
-// 	return
-// }
 
 func isExists(path string) bool {
 	_, err := os.Stat(path)
@@ -110,34 +103,17 @@ func isExists(path string) bool {
 	return os.IsExist(err)
 }
 
-func viewHandler(w http.ResponseWriter, r *http.Request) {
-	imageId := r.FormValue("id")
-	imagePath := UPLOAD_DIR + "/" + imageId
-	if exists := isExists(imagePath); !exists {
-		http.NotFound(w, r)
-		return
-	}
-	//w.Header().Set("Content-Type", "application/pdf")
-	http.ServeFile(w, r, imagePath)
-}
-
-func listHandler(w http.ResponseWriter, r *http.Request) {
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 	imageId := r.URL.Path // /6005f38d6f4160d3f15da8d7673102b0.json
 
-	if imageId == "" {
-		fileInfoArr, err := ioutil.ReadDir("./uploads")
-		check(err)
+	log.Printf("indexHandler imageId:'%s'", imageId)
+	if imageId == "/" {
 		locals := make(map[string]interface{})
-		images := []string{}
-		for _, fileInfo := range fileInfoArr {
-			images = append(images, fileInfo.Name())
-		}
 		locals["hostname"], _ = os.Hostname()
-		locals["images"] = images
-		readerHtml(w, "list", locals)
+		readerHtml(w, "index", locals)
 	} else {
 		log.Println(imageId)
-		imagePath := UPLOAD_DIR + "/" + imageId
+		imagePath := UploadDir + "/" + imageId
 		if exists := isExists(imagePath); !exists {
 			http.NotFound(w, r)
 			return
@@ -145,6 +121,30 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 		//w.Header().Set("Content-Type", "application/pdf")
 		http.ServeFile(w, r, imagePath)
 	}
+}
+
+func listHandler(w http.ResponseWriter, r *http.Request) {
+	fileInfoArr, err := ioutil.ReadDir("./uploads")
+	check(err)
+	locals := make(map[string]interface{})
+	images := []string{}
+	for _, fileInfo := range fileInfoArr {
+		images = append(images, fileInfo.Name())
+	}
+	locals["hostname"], _ = os.Hostname()
+	locals["images"] = images
+	readerHtml(w, "list", locals)
+}
+
+func infoHandler(w http.ResponseWriter, r *http.Request) {
+	imageId := r.FormValue("id")
+	imagePath := UploadDir + "/" + imageId
+	if exists := isExists(imagePath); !exists {
+		http.NotFound(w, r)
+		return
+	}
+	//w.Header().Set("Content-Type", "application/pdf")
+	http.ServeFile(w, r, imagePath)
 }
 
 func safeHandler(fn http.HandlerFunc) http.HandlerFunc {
@@ -241,6 +241,9 @@ func demoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/**
+ * 上传 post
+ */
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		origin := r.Header.Get("Origin")
@@ -290,7 +293,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 保存临时文件
-		tempFile, err := ioutil.TempFile(TEMP_DIR, uploadName)
+		tempFile, err := ioutil.TempFile(TempDir, uploadName)
 		defer tempFile.Close()
 		//defer os.Remove(tempFile.Name()) // temp/favicon.ico395854444
 		check(err)
@@ -309,7 +312,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		newName := string(md5_name) + ext
 		// 新建文件
-		newFile, err := os.Create(UPLOAD_DIR + "/" + newName)
+		newFile, err := os.Create(UploadDir + "/" + newName)
 		check(err)
 		defer newFile.Close()
 		_, err = io.Copy(newFile, tempFile)

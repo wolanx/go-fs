@@ -2,22 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>list</title>
+    <title>go-fs</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="stylesheet" href="/assets/1.css">
     <script src="/assets/1.js"></script>
 </head>
 <body>
 
-<div>{{$.hostname}}</div>
-<div>
-    <a href="/demo">upload demo</a>
-</div>
+<h1>文件上传</h1>
 
-<ul>
-{{range $.images}}
-    <li><a href="/{{.|urlquery}}">{{.|html}}</a></li>
-{{end}}
-</ul>
+<h2>github.com/zx5435/go-fs</h2>
+
+<h3>hostname：{{$.hostname}}</h3>
+
 </body>
 </html>
