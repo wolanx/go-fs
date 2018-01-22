@@ -7,8 +7,7 @@
 
 ## build
 ```text
-make
-docker tag go-fs:v1 zx5435/go-fs:v1
+make build
 docker push zx5435/go-fs:v1
 ```
 
@@ -17,7 +16,7 @@ docker push zx5435/go-fs:v1
 ### manual
 ```text
 make
-docker run -it -d -p 22016:8080 --name go-fs go-fs:v1
+docker run -it -d -p 22016:8080 --name go-fs zx5435/go-fs:v1
 ```
 
 ### deploy yml
