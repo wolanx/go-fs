@@ -9,6 +9,11 @@ import (
 )
 
 func ListHandler(w http.ResponseWriter, r *http.Request) {
+	if !lib.Debug {
+		w.Write([]byte("no run in debug false"))
+		return
+	}
+
 	fileInfoArr, err := ioutil.ReadDir("./uploads")
 	lib.Check(err)
 	locals := make(map[string]interface{})
