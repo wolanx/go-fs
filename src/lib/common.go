@@ -35,6 +35,7 @@ type Policy struct {
 
 var MyAccessKey string
 var MySecretKey string
+var Debug bool
 
 var keyArr map[string]interface{}
 var templates map[string]*template.Template
@@ -42,6 +43,7 @@ var templates map[string]*template.Template
 func init() {
 	MyAccessKey = os.Getenv("ACCESS_KEY")
 	MySecretKey = os.Getenv("SECRET_KEY")
+	Debug = os.Getenv("DEBUG") == "true"
 	if MyAccessKey == "" {
 		MyAccessKey = "MY_test1"
 	}

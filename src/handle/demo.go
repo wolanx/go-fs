@@ -14,6 +14,11 @@ import (
 
 //@ref https://developer.qiniu.com/kodo/manual/1208/upload-token
 func DemoHandler(w http.ResponseWriter, r *http.Request) {
+	if !lib.Debug {
+		w.Write([]byte("no run in debug false"))
+		return
+	}
+
 	if r.Method == "GET" {
 		lib.ReaderHtml(w, "upload", nil)
 	}

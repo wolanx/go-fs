@@ -15,6 +15,7 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("indexHandler imageId:'%s'", imageId)
 	if imageId == "/" {
 		locals := make(map[string]interface{})
+		locals["debug"] = lib.Debug
 		locals["hostname"], _ = os.Hostname()
 		lib.ReaderHtml(w, "index", locals)
 	} else {

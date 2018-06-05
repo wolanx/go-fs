@@ -1,3 +1,6 @@
+# 文件上传
+------
+
 ## 上传step
 
 1. server端获取token
@@ -13,13 +16,22 @@ docker push zx5435/go-fs:v1
 
 ## deploy
 
-### manual
+### 方式1
 ```text
-make
-docker run -it -d -p 22016:8080 --name go-fs zx5435/go-fs:v1
+// pre
+mkdir s1
+cd s1
+
+// test
+docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads \
+ --name go-fs -e DEBUG=true zx5435/go-fs:v1
+
+// prod to set your env
+docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads \
+ --name go-fs -e ACCESS_KEY=YourPublicKey -e SECRET_KEY=YourPrivateKey zx5435/go-fs:v1
 ```
 
-### deploy yml
+### 方式2
 ```text
 version: "3"
 services:
@@ -28,8 +40,9 @@ services:
     volumes:
       - ./upload:/app/uploads
     environment:
-      - ACCESS_KEY=MDev1
-      - SECRET_KEY=MDev2
+      - DEBUG=true
+      - ACCESS_KEY=YourPublicKey
+      - SECRET_KEY=YourPrivateKey
       - URL_PATH=/creatives
     networks:
       - mynet
