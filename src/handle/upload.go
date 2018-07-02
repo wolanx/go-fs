@@ -107,8 +107,13 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		urlPath := os.Getenv("URL_PATH")
 
+		if urlPath == "" {
+			ret["name"] = scheme + r.Host + "/" + newName
+		} else {
+			ret["name"] = urlPath + "/" + newName
+		}
+
 		ret["key"] = newName
-		ret["name"] = scheme + r.Host + urlPath + "/" + newName
 		log.Println(ret["name"])
 		str, _ := json.Marshal(ret)
 		w.Write(str)
