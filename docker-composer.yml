@@ -1,0 +1,19 @@
+version: "2"
+services:
+  upload:
+    image: zx5435/go-fs:v1
+    ports:
+      - "8080"
+    volumes:
+      - ./upload:/app/uploads
+    environment:
+      - DEBUG=true
+      - ACCESS_KEY=YourPublicKey
+      - SECRET_KEY=YourPrivateKey
+      - URL_PATH=/creatives
+    networks:
+      - mynet
+networks:
+  mynet:
+volumes:
+  mydir:
