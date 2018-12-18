@@ -5,13 +5,15 @@ workspace:
 pipeline:
   build:
      image: golang:1.10.2
-     # pull: true
      environment:
-       - KEY=VALUE
+       - KEY=mykeymykeymykeymykey
      secrets: [key1, key2]
      commands:
        - echo $$KEY
        - pwd
-       - ls
        - CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o go-fs .
+       - ls
+       - curl https://get.docker.io/builds/Linux/x86_64/docker-latest -o /usr/local/bin/docker
+       - chmod +x /usr/local/bin/docker
+       - export DOCKER_HOST="unix:///var/run/docker.sock"
        - docker build -t zx5435/go-fs:v1 .
