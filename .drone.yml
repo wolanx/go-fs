@@ -1,5 +1,5 @@
 workspace:
-  base: /srv/drone-demo
+  base: /usr/local/go/src/github.com/zx5435/go-fs
   path: .
 
 pipeline:
@@ -13,5 +13,5 @@ pipeline:
        - echo $$KEY
        - pwd
        - ls
-       - CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
-       - ./app
+       - CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o go-fs .
+       - docker build -t zx5435/go-fs:v1 .
