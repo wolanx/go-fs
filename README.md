@@ -61,7 +61,7 @@ volumes:
 ```text
 server {
     listen       80;
-    server_name  s1.bitdata.com.cn;
+    server_name  s1.zx5435.com;
 
     charset utf8;
 
@@ -82,15 +82,15 @@ server {
 }
 server {
     listen       443 ssl;
-    server_name  s1.bitdata.com.cn;
+    server_name  s1.zx5435.com;
 
     charset utf8;
 
     root /www/s1;
     expires 30d;
 
-    ssl_certificate           /www/certbot/ssl/live/www.bitdata.com.cn/fullchain.pem;
-    ssl_certificate_key       /www/certbot/ssl/live/www.bitdata.com.cn/privkey.pem;
+    ssl_certificate           /www/certbot/ssl/live/www.zx5435.com/fullchain.pem;
+    ssl_certificate_key       /www/certbot/ssl/live/www.zx5435.com/privkey.pem;
     ssl_session_timeout       5m;
     ssl_ciphers               ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
     ssl_protocols             TLSv1 TLSv1.1 TLSv1.2;
