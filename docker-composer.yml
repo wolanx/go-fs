@@ -1,7 +1,7 @@
 version: "2"
 services:
   upload:
-    image: wolanx:go-fs
+    image: ghcr.io/wolanx/go-fs
     ports:
       - "8080"
     volumes:

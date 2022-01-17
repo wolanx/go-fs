@@ -1,5 +1,1 @@
-.*
-temp/*
-temp/!.gitignore
-uploads/*
-uploads/!.gitignore
+Dockerfile

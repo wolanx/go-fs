@@ -9,7 +9,7 @@
 1. 通过配置设置后续事件
 
 ## use
-docker push wolanx:go-fs
+docker push ghcr.io/wolanx/go-fs
 
 ## deploy
 
@@ -20,15 +20,15 @@ mkdir s1
 cd s1
 
 # test
-docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads --name go-fs -e DEBUG=true wolanx:go-fs
+docker run --name go-fs -it -d -p 22016:8080 -v "$PWD":/app/uploads -e DEBUG=true ghcr.io/wolanx/go-fs
 
 # prod to set your env
-docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads --name go-fs \
- -e ACCESS_KEY=YourPublicKey -e SECRET_KEY=YourPrivateKey wolanx:go-fs
+docker run --name go-fs -it -d -p 22016:8080 -v "$PWD":/app/uploads \
+ -e ACCESS_KEY=YourPublicKey -e SECRET_KEY=YourPrivateKey ghcr.io/wolanx/go-fs
 
 # demo
-docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads --name go-fs \
- -e ACCESS_KEY=wolanx -e SECRET_KEY=wolanxkey -e URL_PATH=https://s1.wolanx.com wolanx:go-fs
+docker run --name go-fs -it -d -p 22016:8080 -v "$PWD":/app/uploads \
+ -e ACCESS_KEY=wolanx -e SECRET_KEY=wolanxkey -e URL_PATH=https://s1.wolanx.com ghcr.io/wolanx/go-fs
 ```
 
 ### 方式2
@@ -36,7 +36,7 @@ docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads --name go-fs \
 version: "3"
 services:
   upload:
-    image: wolanx:go-fs
+    image: ghcr.io/wolanx/go-fs
     volumes:
       - ./upload:/app/uploads
     environment:

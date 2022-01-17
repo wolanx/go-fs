@@ -4,11 +4,11 @@ FROM golang:1.17.5 AS builder
 
 WORKDIR /app
 
-#ADD go.mod .
+ADD go.mod .
 #ADD go.sum .
 #RUN go mod download
 COPY . .
-#RUN go mod tidy
+RUN go mod tidy
 RUN CGO_ENABLED=0 go build -o go-fs
 
 FROM alpine
@@ -18,6 +18,9 @@ ENV TZ utc-8
 
 WORKDIR /app
 
+COPY assets assets
+COPY uploads uploads
+COPY views views
 COPY --from=builder /app/go-fs .
 
 EXPOSE 8080
