@@ -1,7 +1,7 @@
 version: "2"
 services:
   upload:
-    image: zx5435/go-fs:v1
+    image: wolanx:go-fs
     ports:
       - "8080"
     volumes:

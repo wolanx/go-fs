@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/zx5435/go-fs/src/lib"
+	"github.com/wolanx/go-fs/src/lib"
 )
 
 //@ref https://developer.qiniu.com/kodo/manual/1208/upload-token

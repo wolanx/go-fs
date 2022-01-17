@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/zx5435/go-fs/src/lib"
+	"github.com/wolanx/go-fs/src/lib"
 )
 
 func ListHandler(w http.ResponseWriter, r *http.Request) {

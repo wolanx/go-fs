@@ -8,31 +8,27 @@
 1. 获得name
 1. 通过配置设置后续事件
 
-## build
-```text
-make build
-docker push zx5435/go-fs:v1
-```
+## use
+docker push wolanx:go-fs
 
 ## deploy
 
 ### 方式1
-```text
-// pre
+```shell
+# pre create dir to persistent storage
 mkdir s1
 cd s1
 
-// test
-docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads \
- --name go-fs -e DEBUG=true zx5435/go-fs:v1
+# test
+docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads --name go-fs -e DEBUG=true wolanx:go-fs
 
-// prod to set your env
-docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads \
- --name go-fs -e ACCESS_KEY=YourPublicKey -e SECRET_KEY=YourPrivateKey zx5435/go-fs:v1
-
-// demo
+# prod to set your env
 docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads --name go-fs \
- -e ACCESS_KEY=zx5435 -e SECRET_KEY=zx5435key -e URL_PATH=https://s1.zx5435.com zx5435/go-fs:v1
+ -e ACCESS_KEY=YourPublicKey -e SECRET_KEY=YourPrivateKey wolanx:go-fs
+
+# demo
+docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads --name go-fs \
+ -e ACCESS_KEY=wolanx -e SECRET_KEY=wolanxkey -e URL_PATH=https://s1.wolanx.com wolanx:go-fs
 ```
 
 ### 方式2
@@ -40,7 +36,7 @@ docker run -it -d -p 22016:8080 -v "$PWD":/app/uploads --name go-fs \
 version: "3"
 services:
   upload:
-    image: zx5435/go-fs:v1
+    image: wolanx:go-fs
     volumes:
       - ./upload:/app/uploads
     environment:
@@ -61,7 +57,7 @@ volumes:
 ```text
 server {
     listen       80;
-    server_name  s1.zx5435.com;
+    server_name  s1.wolanx.com;
 
     charset utf8;
 
@@ -82,15 +78,15 @@ server {
 }
 server {
     listen       443 ssl;
-    server_name  s1.zx5435.com;
+    server_name  s1.wolanx.com;
 
     charset utf8;
 
     root /www/s1;
     expires 30d;
 
-    ssl_certificate           /www/certbot/ssl/live/www.zx5435.com/fullchain.pem;
-    ssl_certificate_key       /www/certbot/ssl/live/www.zx5435.com/privkey.pem;
+    ssl_certificate           /www/certbot/ssl/live/www.wolanx.com/fullchain.pem;
+    ssl_certificate_key       /www/certbot/ssl/live/www.wolanx.com/privkey.pem;
     ssl_session_timeout       5m;
     ssl_ciphers               ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
     ssl_protocols             TLSv1 TLSv1.1 TLSv1.2;

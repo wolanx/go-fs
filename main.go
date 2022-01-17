@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/zx5435/go-fs/src/config"
-	"github.com/zx5435/go-fs/src/handle"
+	"github.com/wolanx/go-fs/src/config"
+	"github.com/wolanx/go-fs/src/handle"
 )
 
 func main() {

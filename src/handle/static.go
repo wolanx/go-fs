@@ -3,8 +3,8 @@ package handle
 import (
 	"net/http"
 
-	"github.com/zx5435/go-fs/src/config"
-	"github.com/zx5435/go-fs/src/lib"
+	"github.com/wolanx/go-fs/src/config"
+	"github.com/wolanx/go-fs/src/lib"
 )
 
 func StaticHandler(mux *http.ServeMux, prefix string, staticDir string, flags int) {
